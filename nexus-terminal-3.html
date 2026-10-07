@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nexus Terminal</title>
+<style>
+:root{--bg:#06080c;--p:#0d121a;--p2:#151d29;--line:#202b3b;--t:#eaf2fc;--m:#7b8aa0;--g:#4ff0a0;--c:#52d6ff;--r:#ff6a82;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f2f5f9;--p:#fff;--p2:#eaeff5;--line:#d6dee9;--t:#0d1622;--m:#5b697c;--g:#08965a;--c:#0883b4;--r:#d4274b;color-scheme:light}}
+:root[data-theme="light"]{--bg:#f2f5f9;--p:#fff;--p2:#eaeff5;--line:#d6dee9;--t:#0d1622;--m:#5b697c;--g:#08965a;--c:#0883b4;--r:#d4274b;color-scheme:light}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--t);font:14px/1.5 Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+button,textarea{font:inherit;color:inherit}button{cursor:pointer}
+#boot{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:var(--bg);transition:opacity .5s}
+#boot.out{opacity:0;pointer-events:none}
+.bb{width:min(340px,80vw);text-align:center}
+.logo{width:84px;height:84px;margin:0 auto 22px;border-radius:24px;display:grid;place-items:center;font:800 46px system-ui;color:#04140b;background:linear-gradient(145deg,#9dffc9,#22c877);box-shadow:0 0 64px #3fee9440;animation:fl 2s ease-in-out infinite}
+@keyframes fl{50%{transform:translateY(-5px)}}
+.bb h1{margin:0;font-size:24px}.bb p{margin:4px 0 0;color:var(--m);font-size:12px}
+.bar{height:6px;border-radius:9px;background:var(--p2);overflow:hidden;margin:24px 0 10px}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--g),var(--c));transition:width .4s}
+#bm{font:11px ui-monospace,monospace;color:var(--m)}
+#app{height:100%;display:flex;flex-direction:column;opacity:0;transition:opacity .5s}#app.on{opacity:1}
+.pgs{flex:1;min-height:0;position:relative}
+.pg{position:absolute;inset:0;display:none;flex-direction:column;padding:16px;overflow:auto}.pg.on{display:flex}
+.nav{display:flex;border-top:1px solid var(--line);background:var(--p)}
+.nav button{flex:1;border:0;background:none;padding:9px 0 8px;color:var(--m);font-size:10px;display:grid;gap:1px;justify-items:center}
+.nav button b{font-size:20px;font-weight:400;line-height:1.2}.nav button.on{color:var(--g)}
+.hero{padding:22px 0 14px;text-align:center}
+.hero .logo{width:68px;height:68px;font-size:36px;border-radius:20px;margin-bottom:16px}
+.hero h1{margin:0;font-size:27px}.hero p{margin:6px 0 0;color:var(--m);font-size:13px}
+.cards{display:grid;gap:10px;max-width:560px;width:100%;margin:8px auto 0}
+.card{display:flex;align-items:center;gap:14px;padding:16px;border:1px solid var(--line);border-radius:16px;background:var(--p);text-align:left;width:100%}
+.card:active{background:var(--p2)}
+.card .ic{width:46px;height:46px;flex:none;border-radius:13px;display:grid;place-items:center;font-size:21px;background:var(--p2);color:var(--g)}
+.card b{display:block;font-size:15px}.card span{color:var(--m);font-size:12px}
+.chips{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:20px}
+.chip{display:flex;align-items:center;gap:7px;padding:6px 11px;border:1px solid var(--line);border-radius:99px;font-size:11px;color:var(--m)}
+.chip i{width:7px;height:7px;border-radius:50%;background:var(--m)}.chip em{font-style:normal}
+.chip.ok i{background:var(--g);box-shadow:0 0 8px var(--g)}.chip.err i{background:var(--r)}.chip.load i{background:var(--c);animation:bl 1s infinite}
+@keyframes bl{50%{opacity:.25}}
+#code{overflow:hidden;padding:12px}
+.tb{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.seg{display:flex;background:var(--p);border:1px solid var(--line);border-radius:11px;padding:3px}
+.seg button{border:0;background:none;padding:7px 12px;border-radius:8px;font-size:12px;color:var(--m)}.seg button.on{background:var(--p2);color:var(--g)}
+.run{margin-left:auto;border:0;border-radius:11px;padding:10px 16px;font-weight:700;font-size:13px;color:#04140b;background:linear-gradient(135deg,#8dffc0,#25cc7b)}
+#ed{flex:1;min-height:0;width:100%;resize:none;border:1px solid var(--line);border-radius:14px;background:var(--p);padding:14px;outline:0;font-family:ui-monospace,Consolas,monospace;font-size:var(--fs,13px);line-height:1.65;tab-size:4}
+#ed:focus{border-color:var(--g)}
+.con{height:34%;min-height:110px;margin-top:10px;border:1px solid var(--line);border-radius:14px;background:var(--p);display:flex;flex-direction:column;overflow:hidden}
+.ch{display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line);font-size:11px;color:var(--m)}
+.ch button{margin-left:auto;border:0;background:none;color:var(--m);font-size:11px}
+#out{flex:1;overflow:auto;padding:10px 12px;font:12px/1.6 ui-monospace,monospace}
+.l{white-space:pre-wrap;word-break:break-word}.ok{color:var(--g)}.inf{color:var(--c)}.err{color:var(--r)}.mu{color:var(--m)}.pr:before{content:"$ ";color:var(--g)}
+#prev{padding:12px}
+.ph{display:flex;align-items:center;gap:8px;margin-bottom:10px}.ph h2{margin:0;font-size:18px;flex:1}
+.sb{border:1px solid var(--line);background:var(--p);border-radius:10px;padding:8px 12px;font-size:12px}
+#fr{flex:1;width:100%;min-height:0;border:1px solid var(--line);border-radius:14px;background:#fff}
+.set{max-width:560px;width:100%;margin:0 auto}.set h2{margin:6px 0 10px;font-size:22px}
+.row{display:flex;align-items:center;gap:12px;padding:15px 0;border-bottom:1px solid var(--line)}
+.row div{flex:1}.row b{display:block;font-size:14px}.row small{color:var(--m);font-size:12px}
+.sw{width:46px;height:27px;flex:none;border-radius:99px;border:0;background:var(--p2);position:relative}
+.sw:after{content:"";position:absolute;top:3px;left:3px;width:21px;height:21px;border-radius:50%;background:var(--m);transition:.2s}
+.sw.on{background:var(--g)}.sw.on:after{left:22px;background:#04140b}
+input[type=range]{width:120px;accent-color:var(--g)}
+.note{margin-top:18px;color:var(--m);font-size:12px}
+</style>
+</head>
+<body>
+<div id="boot"><div class="bb">
+  <div class="logo">N</div><h1>Nexus Terminal</h1><p>Tarayıcıda kod yaz, çalıştır, önizle</p>
+  <div class="bar"><i id="bf"></i></div><div id="bm">Başlatılıyor…</div>
+</div></div>
+
+<div id="app">
+ <div class="pgs">
+  <section id="home" class="pg on">
+   <div class="hero"><div class="logo">N</div><h1>Nexus Terminal</h1><p>Kodla, çalıştır, anında gör.</p></div>
+   <div class="cards">
+    <button class="card" data-go="code"><span class="ic">‹›</span><div><b>Kod Editörü</b><span>Python, JavaScript ve HTML yaz</span></div></button>
+    <button class="card" data-go="prev"><span class="ic">◉</span><div><b>Canlı Önizleme</b><span>HTML'ni tam ekranda gör</span></div></button>
+    <button class="card" data-go="set"><span class="ic">⚙</span><div><b>Ayarlar</b><span>Tema ve yazı boyutu</span></div></button>
+   </div>
+   <div class="chips">
+    <span class="chip ok"><i></i><em>JavaScript hazır</em></span>
+    <span class="chip pyc load"><i></i><em>Python yükleniyor</em></span>
+    <span class="chip ok"><i></i><em>Kodların cihazında kalır</em></span>
+   </div>
+  </section>
+
+  <section id="code" class="pg">
+   <div class="tb">
+    <div class="seg"><button data-l="py">Python</button><button data-l="js">JS</button><button data-l="html">HTML</button></div>
+    <button class="run" id="run">▶ Çalıştır</button>
+   </div>
+   <textarea id="ed" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off"></textarea>
+   <div class="con"><div class="ch">Çıktı<button id="clr">Temizle</button></div><div id="out"></div></div>
+  </section>
+
+  <section id="prev" class="pg">
+   <div class="ph"><h2>Önizleme</h2><button class="sb" id="rf">↻ Yenile</button><button class="sb" id="cp">⧉ Kopyala</button></div>
+   <iframe id="fr" sandbox="allow-scripts allow-forms" title="Önizleme"></iframe>
+  </section>
+
+  <section id="set" class="pg">
+   <div class="set">
+    <h2>Ayarlar</h2>
+    <div class="row"><div><b>Açık tema</b><small>Koyu yerine açık renkler</small></div><button class="sw" id="th" aria-label="Açık tema"></button></div>
+    <div class="row"><div><b>Yazı boyutu</b><small id="fsv"></small></div><input type="range" id="fs" min="11" max="19"></div>
+    <div class="row"><div><b>Örnek kodları geri yükle</b><small>Editördeki tüm kodlar sıfırlanır</small></div><button class="sb" id="rs">Sıfırla</button></div>
+    <p class="note">Kodların yalnızca bu tarayıcıda saklanır, hiçbir yere gönderilmez. HTML önizlemesi kısıtlı bir sandbox içinde çalışır.</p>
+   </div>
+  </section>
+ </div>
+ <nav class="nav">
+  <button data-go="home"><b>⌂</b>Ana Sayfa</button>
+  <button data-go="code"><b>‹›</b>Editör</button>
+  <button data-go="prev"><b>◉</b>Önizleme</button>
+  <button data-go="set"><b>⚙</b>Ayarlar</button>
+ </nav>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const D={
+py:`print("Merhaba Nexus!")\n\nfor i in range(1, 4):\n    print(f"Görev #{i} tamamlandı")\n\nprint("Toplam:", sum(range(101)))`,
+js:`const kare = n => n * n;\nconsole.log("Merhaba Nexus!");\nconsole.log([1, 2, 3, 4].map(kare));`,
+html:`<!doctype html>\n<html lang="tr">\n<head>\n<meta charset="utf-8">\n<style>\nbody{margin:0;min-height:100vh;display:grid;place-items:center;background:#0b1118;color:#fff;font-family:system-ui}\n.box{padding:28px;border:1px solid #2c4a60;border-radius:20px;background:#121c28;text-align:center}\nh1{color:#4ff0a0;margin:0 0 8px}\nbutton{padding:10px 16px;border:0;border-radius:10px;background:#4ff0a0;font-weight:700}\n</style>\n</head>\n<body>\n<div class="box">\n<h1>Merhaba Nexus 👋</h1>\n<p>Yazdığın HTML burada canlı görünür.</p>\n<button onclick="document.body.style.background='#1b1030'">Dene</button>\n</div>\n</body>\n</html>`};
+let S={fs:13,light:false,lang:'js',code:{...D}};
+try{Object.assign(S,JSON.parse(localStorage.getItem('nx')||'{}'))}catch(e){}
+S.code={...D,...S.code};
+const save=()=>{try{localStorage.setItem('nx',JSON.stringify(S))}catch(e){}};
+let PY='load',py=null,st;
+
+function log(t,c=''){const d=document.createElement('div');d.className='l '+c;d.textContent=t;$('out').appendChild(d);$('out').scrollTop=1e9}
+function go(id,push){
+ if(!['home','code','prev','set'].includes(id))id='home';
+ document.querySelectorAll('.pg').forEach(p=>p.classList.toggle('on',p.id===id));
+ document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.go===id));
+ if(id==='prev')$('fr').srcdoc=S.code.html;
+ if(push!==false&&location.hash!=='#'+id)location.hash=id;
+}
+function mark(){document.querySelectorAll('.seg button').forEach(b=>b.classList.toggle('on',b.dataset.l===S.lang));$('run').textContent=S.lang==='html'?'◉ Önizle':'▶ Çalıştır'}
+function setLang(l){S.code[S.lang]=$('ed').value;S.lang=l;$('ed').value=S.code[l];mark();save()}
+function theme(){document.documentElement.dataset.theme=S.light?'light':'dark';$('th').classList.toggle('on',S.light)}
+function fsz(){document.documentElement.style.setProperty('--fs',S.fs+'px');$('fs').value=S.fs;$('fsv').textContent=S.fs+' px'}
+function setPy(s){PY=s;const m={load:['Python yükleniyor','load'],ok:['Python hazır','ok'],err:['Python bu ortamda açılamadı','err']}[s];
+ document.querySelectorAll('.pyc').forEach(c=>{c.className='chip pyc '+m[1];c.querySelector('em').textContent=m[0]});
+ if(s==='ok')log('[✓] Python motoru hazır.','ok')}
+async function initPy(){
+ try{
+  await new Promise((ok,no)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/pyodide@0.27.7/pyodide.js';s.onload=ok;s.onerror=no;document.head.appendChild(s)});
+  py=await loadPyodide({indexURL:'https://cdn.jsdelivr.net/npm/pyodide@0.27.7/'});
+  setPy('ok');
+ }catch(e){setPy('err')}
+}
+const fm=a=>a.map(x=>{if(typeof x==='object'&&x!==null){try{return JSON.stringify(x)}catch(e){}}return String(x)}).join(' ');
+function runJS(){
+ window.__c={log:(...a)=>log(fm(a)),info:(...a)=>log(fm(a),'inf'),warn:(...a)=>log(fm(a),'inf'),error:(...a)=>log(fm(a),'err')};
+ const h=e=>{e.preventDefault();log(e.message,'err')};
+ window.addEventListener('error',h,{once:true});
+ const s=document.createElement('script');
+ s.textContent='(async()=>{const console=window.__c;try{\n'+$('ed').value+'\n}catch(e){console.error(String(e))}})()';
+ document.body.appendChild(s);s.remove();
+ setTimeout(()=>window.removeEventListener('error',h),80);
+}
+async function runPy(){
+ if(PY==='load'){log('Python motoru yükleniyor, birkaç saniye sonra tekrar dene.','inf');return}
+ if(PY!=='ok'){log('Python motoru bu ortamda açılamadı. JS sekmesiyle çalışabilirsin.','err');return}
+ const a=[];py.setStdout({batched:x=>a.push(x)});py.setStderr({batched:x=>a.push(x)});
+ try{await py.runPythonAsync($('ed').value);a.forEach(x=>log(x))}catch(e){a.forEach(x=>log(x));log(String(e.message||e),'err')}
+}
+function run(){
+ S.code[S.lang]=$('ed').value;save();
+ if(S.lang==='html'){go('prev');return}
+ log(S.lang==='py'?'python main.py':'node index.js','pr');
+ S.lang==='py'?runPy():runJS();
+}
+async function copy(){
+ const t=S.code.html;
+ try{await navigator.clipboard.writeText(t)}catch(e){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(_){}a.remove()}
+ $('cp').textContent='✓ Kopyalandı';setTimeout(()=>$('cp').textContent='⧉ Kopyala',1500);
+}
+
+document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
+document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>setLang(b.dataset.l));
+window.addEventListener('hashchange',()=>go(location.hash.slice(1),false));
+$('run').onclick=run;$('clr').onclick=()=>$('out').innerHTML='';
+$('rf').onclick=()=>{$('fr').srcdoc=S.code.html};$('cp').onclick=copy;
+$('th').onclick=()=>{S.light=!S.light;theme();save()};
+$('fs').oninput=e=>{S.fs=+e.target.value;fsz();save()};
+$('rs').onclick=()=>{S.code={...D};$('ed').value=S.code[S.lang];save();$('rs').textContent='✓ Sıfırlandı';setTimeout(()=>$('rs').textContent='Sıfırla',1500)};
+$('ed').addEventListener('input',()=>{S.code[S.lang]=$('ed').value;clearTimeout(st);st=setTimeout(save,400)});
+$('ed').addEventListener('keydown',e=>{
+ if(e.key==='Tab'){e.preventDefault();e.target.setRangeText('    ',e.target.selectionStart,e.target.selectionEnd,'end')}
+ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();run()}
+});
+
+theme();fsz();$('ed').value=S.code[S.lang];mark();go(location.hash.slice(1),false);
+log('Nexus Terminal hazır.','ok');
+
+const steps=[[18,'Arayüz hazırlanıyor…'],[48,'Editör yükleniyor…'],[78,'Güvenli alan kuruluyor…'],[100,'Hazır']];
+let i=0;
+(function tick(){
+ if(i<steps.length){$('bf').style.width=steps[i][0]+'%';$('bm').textContent=steps[i][1];i++;setTimeout(tick,480)}
+ else setTimeout(()=>{$('boot').classList.add('out');$('app').classList.add('on');setTimeout(()=>$('boot').remove(),550);initPy()},350);
+})();
+</script>
+</body>
+</html>
